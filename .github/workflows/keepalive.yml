@@ -1,11 +1,27 @@
-name: 保持活动状态
+name: Keepalive
+
 on:
   schedule:
-    - cron: "0 0 */7 * *"
+    - cron: '0 0 */7 * *'   # 每周一 UTC 0:00
+  workflow_dispatch:
 
 jobs:
-  main:
+  keepalive:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write      # 允许推送提交
     steps:
-      - uses: actions/checkout@v3
-      - uses: liskin/gh-workflow-keepalive@v1
+      - uses: actions/checkout@v4
+
+      - name: Keepalive commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # 更新一个无伤大雅的时间戳文件
+          date > .keepalive
+          
+          git add .keepalive
+          # 仅当文件有变化时才提交，避免空提交报错
+          git diff --staged --quiet || git commit -m "chore: keepalive commit"
+          git push
